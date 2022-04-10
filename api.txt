@@ -1,0 +1,97 @@
+Profile:
+- name - публичное имя - любой язык, от 1 до 50 символов: string
+- registration_time: date
+- avatar?: image
+
+User:
+- nickname - только латинские буквы, от 3 до 15 символов: string
+- password - хранить зашифрованным - от 8 до 12 символов, как минимум 1 цифра, только латинские буквы:  string
+- profile: Profile
+
+Message:
+- body: string
+- publication_time: date
+- author: Profile
+
+Thread:
+- name: string
+- messages: Message[]
+
+/api
+  /threads
+    -> GET / - возвращает список тредов
+      - response dto: {
+          threads: {
+            id: id,
+            name: string,
+            last_messsage: {
+              body: string,
+              publication_time: date,
+              author: {
+                name: string,
+                avatar: image
+              }     
+            }
+          }[]
+        }
+
+    -> POST / - создает новый тредов
+      - request dto: { name: string }
+      - response dto: { thread: id }  
+
+    -> GET /[id] - получить данные о конкретном треде
+      - response dto: {
+          thread: {
+            name: string,
+            message: {
+              id: id,
+              body: string,
+              publication_time: date,
+              author: {
+                name: string,
+                avatar: image
+              }
+            }[]
+          }
+        }
+  
+  /messages
+    -> POST /
+        - request dto: {
+          body: string,
+          thread: id
+        }
+        
+    -> PUT /[id]
+        - request dto: {
+          body: string
+        }
+        
+    -> DELETE /[id]
+
+  /auth
+    -> POST /signup
+        - request dto: {
+          nickname: string,
+          password: string,
+          profile: {
+            name: string,
+            avatar?: image
+          }
+        }
+        
+    -> PUT /signin
+        - request dto: {
+          nickname: string,
+          password: string
+        }
+        - response dto: {
+          magic)))????!?!?!?7
+        }
+
+  /profiles
+    -> PUT /[id]
+        - request dto: {
+          name?: string,
+          avatar?: image
+        }
