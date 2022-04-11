@@ -1,19 +1,23 @@
 Profile:
+- id: id  
 - name - публичное имя - любой язык, от 1 до 50 символов: string
 - registration_time: date
 - avatar?: image
 
 User:
+- id: id
 - nickname - только латинские буквы, от 3 до 15 символов: string
 - password - хранить зашифрованным - от 8 до 12 символов, как минимум 1 цифра, только латинские буквы:  string
 - profile: Profile
 
 Message:
+- id: id
 - body: string
 - publication_time: date
 - author: Profile
 
 Thread:
+- id: id
 - name: string
 - messages: Message[]
 
