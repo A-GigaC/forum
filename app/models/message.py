@@ -7,4 +7,9 @@ class Message(db.Model):
     thread_id = db.Column(db.Integer(), db.ForeignKey('threads.id'))
     body = db.Column(db.Unicode())
     publication_time = db.Column(db.Date())
+
+async def create_message(name, body, thread):
+    pass
+
+
     
