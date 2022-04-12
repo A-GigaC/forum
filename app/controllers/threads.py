@@ -32,5 +32,6 @@ async def get_thread_by_id(request):
     # найти все сообщения, которые связаны с этим тредом
     messages = await Message.query.where(Message.thread_id == id).gino.all()
     # собрать все данные в ответный json
-    json = dumps({'thread':messages})
+    json = dumps({"thread":{"id":thread.id,
+        "name": thread.name, "messages": messages }})
     return web.Response(text=json)

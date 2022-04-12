@@ -48,7 +48,7 @@ Thread:
           thread: {
             id: id,
             name: string,
-            message: {
+            messages: {
               id: id,
               body: string,
               publication_time: date,
