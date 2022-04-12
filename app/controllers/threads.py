@@ -1,17 +1,9 @@
 from aiohttp import web
 from json import dumps
 
-from jsonschema import validate
-
+from db import db
 from models.thread import Thread
 from models.message import Message
-
-schema = {
-    "type" : "object",
-    "properties" : {
-        "name" : { "type" : "string" },
-    },
-}
 
 routes = web.RouteTableDef()
 
@@ -35,3 +27,16 @@ async def get_thread_by_id(request):
     json = dumps({"thread":{"id":thread.id,
         "name": thread.name, "messages": messages }})
     return web.Response(text=json)
+
+@routes.get('/api/threads/')
+async def get_threads(request):
+    #получить информацию обо всех тредах
+    threads = await db.all(Thread.query)
+    # собрать все данные в ответный json
+    # для этого создадим массив имен и айдишников
+    obj = []
+    for _ in range(len(threads)):
+        obj.append({"id":threads[_].id, "name":threads[_].name})
+    json = dumps({"threads": obj})
+    return web.Response(text=json)
+

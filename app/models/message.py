@@ -4,12 +4,14 @@ class Message(db.Model):
     __tablename__ = 'messages'
 
     id = db.Column(db.Integer(), primary_key=True)
-    thread_id = db.Column(db.Integer(), db.ForeignKey('threads.id'))
     body = db.Column(db.Unicode())
-    publication_time = db.Column(db.Date())
+    ##реализуем позже
+    ##publication_time = db.Column(db.Date)
+    # связи
+    thread_id = db.Column(db.Integer(), db.ForeignKey('threads.id'))
 
-async def create_message(name, body, thread):
-    pass
+
+
 
 
     

@@ -3,10 +3,10 @@ from aiohttp import web
 app = web.Application()
 
 from controllers.threads import routes as threads_routes
-
-app.add_routes([
-    *threads_routes  # app.add_route('/api/threads/', post_thread)
-])
+from controllers.messages import routes as messages_routes
+# app.add_route('/api/threads/', post_thread)
+app.add_routes([ *threads_routes  ])
+app.add_routes([ *messages_routes  ])
 
 import asyncio
 loop = asyncio.new_event_loop()

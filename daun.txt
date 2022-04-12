@@ -1,1 +1,0 @@
-response dto: {thread: {id: id, name: string,messages: []}}
