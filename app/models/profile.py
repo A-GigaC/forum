@@ -9,4 +9,3 @@ class Profile(db.Model):
     #registration_time = db.Column(db.Date())
     # связи
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
-    message_id = db.Column(db.Integer(), db.ForeignKey('messages.id'))

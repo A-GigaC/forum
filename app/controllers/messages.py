@@ -27,11 +27,12 @@ async def edit_message(request):
     id = int(request.match_info['id'])
     # меняем данные
     await Message.update.values(body=new_body).where(Message.id==id).gino.status()
+    return web.Response(text="success!")
 
-@routes.delete('api/messages/{id}/')
+@routes.delete('/api/messages/{id}/')
 async def delete_message(request):
     # получаем id
     id = int(request.match_info['id'])
     await Message.delete.where(Message.id==id).gino.status()
-
+    return web.Response(text="success!")
     

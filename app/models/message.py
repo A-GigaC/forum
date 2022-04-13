@@ -9,6 +9,7 @@ class Message(db.Model):
     ## publication_time = db.Column(db.Date)
     # связи
     thread_id = db.Column(db.Integer(), db.ForeignKey('threads.id'))
+    profile = db.Column(db.Integer(), db.ForeignKey('profiles.id'))
 
 
 

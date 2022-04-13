@@ -2,7 +2,7 @@ from aiohttp import web
 from json import dumps
 
 from db import db
-from models.message import Profile
+from models.profile import Profile
 
 routes = web.RouteTableDef()
 
@@ -15,4 +15,4 @@ async def edit_profile(request):
     id = int(request.match_info['id'])
     # редактируем профиль
     await Profile.update.values(name=name).where(Profile.id==id).gino.status()
-    
+    return web.Response(text="success!")
