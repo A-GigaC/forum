@@ -18,12 +18,12 @@ async def signup(request):
      user_id=user.id)
     return web.Response(text="success!")
 
-@routes.put('/api/auth/signin/')
+@routes.post('/api/auth/signin/')
 async def signin(request):
     # парсим json, получаем nick, psswrd
     json_input = await request.json()    
     password = await User.select('password').where(
-        User.nickname==json_input['nickname'])
+        User.nickname==json_input['nickname']).gino.scalar()
     if password==json_input['password']:
         json = dumps({"magic":"magic)))????!?!?!?7"})
         return web.Response(text=json)

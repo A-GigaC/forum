@@ -4,6 +4,7 @@ from json import dumps
 from db import db
 from models.thread import Thread
 from models.message import Message
+from models.profile import Profile
 
 routes = web.RouteTableDef()
 
@@ -23,9 +24,26 @@ async def get_thread_by_id(request):
     thread = await Thread.get(id)
     # найти все сообщения, которые связаны с этим тредом
     messages = await Message.query.where(Message.thread_id == id).gino.all()
+    print(messages)
+    last_message = messages[-1]
+    print(last_message)
+    last_message_author = await Profile.get(last_message.author_id)
+    print(last_message_author)
+
     # собрать все данные в ответный json
-    json = dumps({"thread":{"id":thread.id,
-        "name": thread.name, "messages": messages }})
+    json = dumps({
+        "thread": {
+            "id": thread.id,
+            "name": thread.name,
+            "last_message": {
+                "id": last_message.id,
+                "body": last_message.body,
+                "author": {
+                    "name": last_message_author.name,
+                }
+            }
+        }
+    })
     return web.Response(text=json)
 
 @routes.get('/api/threads/')

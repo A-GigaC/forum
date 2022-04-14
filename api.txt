@@ -1,3 +1,5 @@
+type id = string
+
 Profile:
 - id: id  
 - name - публичное имя - любой язык, от 1 до 50 символов: string
@@ -66,17 +68,20 @@ Thread:
           body: string,
           thread: id
         }
-        - response dto: { thread: id }
-        
-    -> PUT /[id]
-        - request dto: {
-          body: string
+        - response dto: {
+          id: id,
+          body: string,
+          publication_time: date,
+          author: Profile
         }
         
-    -> DELETE /[id]
+    -> PUT /[id]/
+        - request dto: { body: string }
+        
+    -> DELETE /[id]/
 
   /auth
-    -> POST /signup
+    -> POST /signup/
         - request dto: {
           nickname: string,
           password: string,
@@ -86,7 +91,7 @@ Thread:
           }
         }
         
-    -> PUT /signin
+    -> POST /signin/
         - request dto: {
           nickname: string,
           password: string
