@@ -7,3 +7,4 @@ class User(db.Model):
      primary_key=True)
     nickname = db.Column(db.Unicode())
     password = db.Column(db.Unicode())
+    auth_key = db.Column(db.Unicode())
