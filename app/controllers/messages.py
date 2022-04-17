@@ -1,6 +1,5 @@
 from aiohttp import web
 from json import dumps
-from app.models.auth_key import Auth_key
 
 from db import db
 from models.message import Message
@@ -14,7 +13,7 @@ async def create_message(request):
     # парсим json, получаем тело нового сообщения и id треда, в котором будет наше сообщние
     json_input = await request.json()
     # получаем профиль оп auth_key
-    author_id = await Auth_key.select('user_id').where(Auth_key.auth_key==json_input['auth_key']).gino.scalar()
+    author_id = await User.select('id').where(User.auth_key==json_input['auth_key']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
     # создаём новое сообщение и записываем в БД
     message = await Message.create(body=json_input['body'], 
@@ -50,7 +49,7 @@ async def delete_message(request):
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по auth_key проверяем право на редактирование
-    user_id = await Auth_key.select('user_id').where(Auth_key.auth_key==json_input['auth_key']).gino.scalar()
+    user_id = await User.select('id').where(User.auth_key==json_input['auth_key']).gino.scalar()
     message = await Message.get(id)
     if user_id != message.author_id:
         access_error = dumps({"error":"you are not the author"})

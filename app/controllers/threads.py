@@ -1,12 +1,14 @@
 from aiohttp import web
+
+from jsonschema import validate
 from json import dumps
-from app.models.auth_key import Auth_key
 
 from db import db
 from models.thread import Thread
 from models.message import Message
 from models.profile import Profile
 from models.user import User
+
 
 routes = web.RouteTableDef()
 
@@ -15,7 +17,7 @@ async def create_thread(request):
     # парсим json, получаем имя нового треда и auth_key
     json_input = await request.json()
     # получаем автора по auth_key
-    author_id = await Auth_key.select('user_id').where(Auth_key.auth_key==json_input['auth_key']).gino.scalar()
+    author_id = await User.select('id').where(User.auth_key==json_input['auth_key']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
     # создаём новый тред с заданным именем и сохраняем в бд
     thread = await Thread.create(name=json_input['name'], author=author_name)
