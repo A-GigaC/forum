@@ -4,7 +4,7 @@ from aiohttp import web
 from jsonschema import validate
 from json import dumps
 from datetime import datetime
-from utils.access_key import aproved
+from utils.access_key import jwt_expired
 
 from db import db
 from models.user import User
@@ -24,6 +24,13 @@ signin_sch = {
     "properties" : {
         "nickname" : {"type" : "string"},
         "password" : {"type" : "string"},
+    },
+}
+get_jwt_sch = {
+    "type" : "object",
+    "properties" : {
+        "user_id" : {"type" : "number"},
+        "auth_key" : {"type" : "string"},
     },
 }
 
@@ -46,7 +53,7 @@ async def signup(request):
     profile = await Profile.create(name=json_input['profile']['name'],
      user_id=user.id)
     # добавляем ключ
-    await Auth_key.create(auth_key=auth_key, user_id=user.id. status="false")
+    await Auth_key.create(auth_key=auth_key, user_id=user.id, status="false")
     # делаем ответ с авторизационным ключем
     json = dumps({"auth_key":auth_key})
     return web.Response(text=json)
@@ -58,7 +65,7 @@ async def signin(request):
     validate(instance=json_input, schema=signin_sch)  
     # проверка существования пользователя с заданным никнеймом
     if not await User.exists(User.query.where(User.nickname == json_input['nickname'])).gino.scalar():
-        nickDoesntExists = json.dump({"error":"nickname doesnt exists"})
+        nickDoesntExists = dumps({"error":"nickname doesnt exists"})
         return web.Response(text=nickDoesntExists)
     # получение пароля
     password = await User.select('password').where(
@@ -66,10 +73,36 @@ async def signin(request):
     # проверка подлинности пароля
     if password==json_input['password']:
         await Auth_key.update(status="true").apply()
-        json = dumps({"datetime":datetime.now().date()})
-        jwt = jwt.encode(json, algorithm="HS256")
-        return web.Response(text=jwt)
+        jwt = dumps({"user_id": await User.id.where(password=password).gino.scalar(), 
+        "datetime":datetime.now().date()})
+        jwt_enc = jwt.encode(jwt, algorithm="HS256")
+        return web.Response(text=jwt_enc)
     else:
-        error = json.dump({"error":"wrong password -50000 social credit"})
+        error = dumps({"error":"wrong password -50000 social credit"})
         return web.Response(text=error)
     
+@routes.post('/api/auth/get_jwt/')
+async def get_jwt(request):
+    # парсим json, получаем необходимую информацию и валидируем
+    json_input = await request.json() 
+    validate(instance=json_input, schema=get_jwt_sch) 
+    user_id = json_input['user_id']
+    input_auth_key = json_input['auth_key']
+    auth_key = await Auth_key.select('auth_key').where(user_id=user_id).gino.scalar()
+    status = await Auth_key.select('status').where(user_id=user_id).gino.scalar()
+    if auth_key != input_auth_key:
+        wrong_key = dumps({"error":"auth_key is wrong"})
+        return web.Response(text=wrong_key)
+    if status == "true":
+        jwt = dumps({"user_id": user_id,
+        "datetime":datetime.now().date()})
+        jwt_enc = jwt.encode(jwt, algorithm="HS256")
+        json = dumps({"jwt":jwt_enc})
+        return web.Response(text=json)
+    else:
+        json = dumps({"error":"account logouted"})
+        return web.Response(text=json)
+    
+@routes.post('/api/auth/logout/')
+async def logout(request):
+    pass

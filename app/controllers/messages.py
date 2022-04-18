@@ -1,19 +1,48 @@
 from aiohttp import web
+
 from json import dumps
+from jsonschema import validate
+from utils.access_key import jwt_expired, get_jwt_dec
+from utils.message_ import message_access
 
 from db import db
 from models.message import Message
 from models.profile import Profile
 from models.user import User
 
+create_sch = {
+    "type" : "object",
+    "properties" : {
+        "jwt" : {"type" : "string"},
+        "body" : {"type" : "string"},
+        "thread" : {"type" : "number"},    
+    },
+}
+edit_sch = {
+    "type" : "object",
+    "properties" : {
+        "jwt" : {"type" : "string"},
+        "body" : {"type" : "string"},
+    },
+}
+delete_sch = {
+    "type" : "object",
+    "properties" : {
+        "jwt" : {"type" : "string"},
+    },
+}
+
 routes = web.RouteTableDef()
 
 @routes.post('/api/messages/')
 async def create_message(request):
-    # парсим json, получаем тело нового сообщения и id треда, в котором будет наше сообщние
+    # парсим и валидируем json, проверяем jwt
     json_input = await request.json()
-    # получаем профиль оп auth_key
-    author_id = await User.select('id').where(User.auth_key==json_input['auth_key']).gino.scalar()
+    validate(instance=json_input, schema=create_sch)
+    jwt_dec = get_jwt_dec(json_input)  
+    jwt_expired(jwt_dec)
+    # получаем профиль <- user_id <- jwt_dec
+    author_id = await Profile.select('id').where(Profile.user_id==jwt_dec['user_id']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
     # создаём новое сообщение и записываем в БД
     message = await Message.create(body=json_input['body'], 
@@ -28,33 +57,30 @@ async def create_message(request):
 async def edit_message(request):
     # парсим json, получаем тело нового сообщения и id треда, в котором будет наше сообщние
     json_input = await request.json()
+    validate(instance=json_input, schema=edit_sch)
+    jwt_dec = get_jwt_dec(json_input)  
+    jwt_expired(jwt_dec)
     # получаем id сообщения
     id = int(request.match_info['id'])
-    # по auth_key проверяем право на редактирование
-    user_id = await User.select('id').where(User.auth_key==json_input['auth_key']).gino.scalar()
-    message = await Message.get(id)
-    if user_id != message.author_id:
-        access_error = dumps({"error":"you are not the author"})
-        return web.Response(text=access_error)
-    else:
-        # меняем данные
-        new_body = json_input["body"]
-        edited_message = await Message.update.values(body=new_body).where(Message.id==id).gino.status()
-        return web.Response(text=edited_message[0])
+    # по jwt проверяем право на редактирование
+    await message_access(jwt_dec)
+    # меняем данные
+    new_body = json_input["body"]
+    edited_message = await Message.update.values(body=new_body).where(Message.id==id).gino.status()
+    return web.Response(text=edited_message[0])
 
 @routes.delete('/api/messages/{id}/')
 async def delete_message(request):
     # парсим json, получаем тело нового сообщения и id треда, в котором будет наше сообщние
     json_input = await request.json()
+    validate(instance=json_input, schema=delete_sch)
+    jwt_dec = get_jwt_dec(json_input)  
+    jwt_expired(jwt_dec)
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по auth_key проверяем право на редактирование
-    user_id = await User.select('id').where(User.auth_key==json_input['auth_key']).gino.scalar()
-    message = await Message.get(id)
-    if user_id != message.author_id:
-        access_error = dumps({"error":"you are not the author"})
-        return web.Response(text=access_error)
-    else:
-        await Message.delete.where(Message.id==id).gino.status()
-        return web.Response(text="message deleted")
+    await message_access(jwt_dec)
+    
+    await Message.delete.where(Message.id==id).gino.status()
+    return web.Response(text="message deleted")
     

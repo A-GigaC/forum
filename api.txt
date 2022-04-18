@@ -22,6 +22,7 @@ Thread:
 - id: id
 - name: string
 - messages: Message[]
+- author: Profile
 
 /api
   /threads
