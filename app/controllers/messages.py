@@ -40,7 +40,7 @@ async def create_message(request):
     json_input = await request.json()
     validate(instance=json_input, schema=create_sch)
     jwt_dec = get_jwt_dec(json_input)  
-    jwt_expired(jwt_dec)
+    jwt_expired(jwt_dec)    
     # получаем профиль <- user_id <- jwt_dec
     author_id = await Profile.select('id').where(Profile.user_id==jwt_dec['user_id']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
