@@ -5,7 +5,6 @@ class Profile(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.Unicode())
-    #  #в доках нету даты при регистрации
-    #registration_time = db.Column(db.Date())
+    registration_time = db.Column(db.Integer())
     # связи
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))

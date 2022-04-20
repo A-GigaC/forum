@@ -57,8 +57,10 @@ async def get_thread_by_id(request):
             "last_message": {
                 "id": last_message.id,
                 "body": last_message.body,
+                "publication_time" : last_message.publication_time,
                 "author": {
                     "name": last_message_author.name,
+                    "registration_time" : last_message_author.registration_time,
                 }
             }
         }

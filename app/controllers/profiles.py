@@ -26,11 +26,12 @@ async def edit_profile(request):
     json_input = await request.json()
     validate(instance=json_input, schema=schema)
     jwt_dec = get_jwt_dec(json_input) 
+    # проверка доступа jwt
     if jwt_dec['user_id'] != id:
         tpe = dumps({"error":"wrong jwt"})
         return web.Response(text=tpe)
     jwt_expired(jwt_dec)
-        # получаем имя
+    # получаем имя
     name = json_input['name']
     # редактируем профиль
     await Profile.update.values(name=name).where(Profile.id==id).gino.status()

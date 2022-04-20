@@ -48,16 +48,18 @@ async def signup(request):
     json_input = await request.json() 
     validate(instance=json_input, schema=signup_sch)
     # проверка существования пользователя с введённым никнеймом
-    if await User.exists(User.query.where(User.nickname == json_input['nickname'])).gino.scalar():
+    try:
+        await db.scalar(db.exists().where(User.nickname == json_input['nickname'])).select()
         nickAlreadyExists = json.dump({"error":"nickname already exists"})
         return web.Response(text=nickAlreadyExists)
-    # создаём нового юзера
-    user = await User.create(nickname=json_input['nickname'],
-        password=json_input['password'])
-    profile = await Profile.create(name=json_input['profile']['name'],
-     user_id=user.id)
-    json = dumps({"success":"you can login"})
-    return web.Response(text=json)
+    except Exception:
+        # создаём нового юзера
+        user = await User.create(nickname=json_input['nickname'],
+            password=json_input['password'])
+        profile = await Profile.create(name=json_input['profile']['name'],
+        user_id=user.id)
+        json = dumps({"success":"you can login"})
+        return web.Response(text=json)
 
 @routes.post('/api/auth/signin/')
 async def signin(request):
@@ -65,7 +67,8 @@ async def signin(request):
     json_input = await request.json() 
     validate(instance=json_input, schema=signin_sch)  
     # проверка существования пользователя с заданным никнеймом
-    if not await User.exists(User.query.where(User.nickname == json_input['nickname'])).gino.scalar():
+   # await db.scalar(db.exists().where(User.email == email).select()
+    if not await db.scalar(db.exists().where(User.nickname == json_input['nickname'])).select():
         nickDoesntExists = dumps({"error":"nickname doesnt exists"})
         return web.Response(text=nickDoesntExists)
     # получение пароля
@@ -97,7 +100,7 @@ async def get_jwt(request):
     input_refresh_token = json_input['refresh_token']
     # проверяем существования введённого refresh_token
     try:
-        old_refresh_token = await Refresh_token.scalar(Refresh_token.exists().where(Refresh_token.refresh_token == input_refresh_token).select())
+        old_refresh_token = await db.scalar(db.exists().where(Refresh_token.refresh_token == input_refresh_token).select())
     except Exception:
         error = dumps({"error":"wrong RT"})
         return web.Response(text=error)
@@ -126,7 +129,8 @@ async def logout(request):
     input_refresh_token = json_input['refresh_token']
     # проверяем существования введённого refresh_token
     try:
-        await Refresh_token.scalar(Refresh_token.exists().where(Refresh_token.refresh_token == input_refresh_token).select())
+
+        await db.scalar(db.exists().where(Refresh_token.refresh_token == input_refresh_token).select())
     except Exception:
         error = dumps({"error":"wrong RT"})
         return web.Response(text=error)

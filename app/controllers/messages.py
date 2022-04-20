@@ -1,4 +1,5 @@
 from aiohttp import web
+import datetime
 
 from json import dumps
 from jsonschema import validate
@@ -45,12 +46,18 @@ async def create_message(request):
     author_id = await Profile.select('id').where(Profile.user_id==jwt_dec['user_id']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
     # создаём новое сообщение и записываем в БД
-    message = await Message.create(body=json_input['body'], 
-        thread_id=int(json_input['thread']), author_id=author_id)
+    message = await Message.create(
+        body=json_input['body'], thread_id=int(json_input['thread']),
+        publication_time=datetime.now().timestamp(), author_id=author_id 
+    )
     # формируем ответ
-    json = dumps({"id":message.id, "body":message.body, "author":{
-        "name": author_name
-    }})
+    json = dumps({
+        "id":message.id, 
+        "body":message.body, 
+        "author":{
+            "publication_time": message.publication_time,
+            "name": author_name,}
+            })
     return web.Response(text=json)
 
 @routes.put('/api/messages/{id}/')

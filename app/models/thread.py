@@ -5,4 +5,4 @@ class Thread(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.Unicode())
-    author = db.Column(db.Unicode(), db.ForeignKey('profiles.id'))
+    author = db.Column(db.Integer(), db.ForeignKey('profiles.id'))
