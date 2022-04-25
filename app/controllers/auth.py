@@ -90,15 +90,17 @@ async def signin(request):
             encoding="utf8")).hexdigest())
         await Refresh_token.create(refresh_token=refresh_token,
             user_id=user_id, creation_time=datetime.now().timestamp())
-        # создаём jwt
-        jwt_ = [{"user_id": user_id, 
-        "creation_time":datetime.now().timestamp()}]
-        jwt_enc = jwt.encode({"data":jwt_}, SECRET_KEY, algorithm="HS256")
+        # создаём jwt #$
+        jwt_ = {"user_id": user_id, 
+        "creation_time":str(datetime.now().timestamp())}
+        jwt_enc = (jwt.encode({"data":jwt_}, SECRET_KEY, algorithm="HS256")).decode('utf-8')
         # формируем ответ
-        json = dumps({"jwt":str(jwt_enc), "refresh_token":str(refresh_token)})
+        json = dumps({"jwt":jwt_enc, "refresh_token":str(refresh_token)})
+        # #$
+        print(jwt_enc)
         return web.Response(text=json)
     else:
-        error = dumps({"error":"wrong password -50000 social credit"})
+        error = dumps({"error":"wrong password"})
         return web.Response(text=error)
     
 @routes.post('/api/auth/get_jwt/')
@@ -127,13 +129,13 @@ async def get_jwt(request):
         Refresh_token.update.values(refresh_token=refresh_token, 
         creation_time=datetime.now().timestamp())
         # создаём jwt
-        jwt_ = [{"user_id": user_id, 
-        "creation_time":datetime.now().timestamp()}]
-        jwt_enc = jwt.encode({"data":jwt_}, SECRET_KEY, algorithm="HS256")
+        jwt_ = {"user_id": user_id, 
+        "creation_time":datetime.now().timestamp()}
+        jwt_enc = (jwt.encode({"data":jwt_}, SECRET_KEY, algorithm="HS256")).decode('utf-8')
         # формируем ответ
-        json = dumps({"jwt":str(jwt_enc), "refresh_token":str(refresh_token)})
+        json = dumps({"jwt":jwt_enc, "refresh_token":str(refresh_token)})
         return web.Response(text=json)
-
+                                            
 @routes.post('/api/auth/logout/')
 async def logout(request):
     # парсим json, получаем необходимую информацию и валидируем

@@ -1,5 +1,6 @@
 import requests
-from ast import literal_eval
+import json
+from datetime import datetime
 
 name = "sergey"
 
@@ -15,19 +16,19 @@ def sign_up():
 
 def auth():
     ### sign_up()
-    # логинимся
+    ## логинимся
     url_signIn = 'http://localhost:8080/api/auth/signin/'
     data2 = {"nickname" : "s3rg3y",
         "password" : "qwerty123"}
     message2 = requests.post(url_signIn, json=data2)
-    print(message2.text)
-    rt = literal_eval(message2.text)['refresh_token']
-    print(rt)
-    # обновляем токены
+    #print(message2.text)
+    rt = json.loads(message2.text)['refresh_token']
+    #print(rt)
+    ## обновляем токены
     url_refresh = 'http://localhost:8080/api/auth/get_jwt/'
     data3 = {"nickname" : "s3rg3y",        
             "refresh_token" : f'{rt}'}
     message3 = requests.post(url_refresh, json=data3)
-    print(message3.text)
-    jwt = literal_eval(message3.text)['jwt']
+    #print(message3.text)
+    jwt = json.loads(message3.text)['jwt']
     return jwt, rt

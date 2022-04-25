@@ -17,8 +17,8 @@ def test_auth():
             "refresh_token" : f'{rt}'}
     message5 = requests.post(url5, json=data5)
     assert message5.text == '{"error": "wrong RT"}', "Не работает logout"
-    print(message5.text)
-    ## # пытаемся повторно зарегестрировать пользователя
+    print("message5.text == ", message5.text)
+    ## # пробуем повторно зарегестрировать пользователя
     '''1- с темже НИКом '''
     url_signUp = 'http://localhost:8080/api/auth/signup/'
     dataX = {"nickname" : "s3rg3y",
@@ -27,4 +27,14 @@ def test_auth():
         "name" : "sergey"}}
     messageX = requests.post(url_signUp, json=dataX)
     assert messageX.text != '{"success": "you can login"}', "Регистрация пользователя с повторяющимся ником!!"
-    print(messageX.text)
+    print("messageX.text == ", messageX.text)
+    # пробуем логинимся с неправильным паролем
+    url_signIn = 'http://localhost:8080/api/auth/signin/'
+    data = {"nickname" : "s3rg3y",
+        "password" : "wrongPswd"}
+    message = requests.post(url_signIn, json=data)
+    print("message.text == ", message.text)
+    assert message.text == '{"error": "wrong password"}', "можно зайти с неправильным паролем!"
+
+
+test_auth()
