@@ -43,7 +43,9 @@ Thread:
         }
 
     -> POST / - создает новый тредов
-      - request dto: { name: string }
+      - request dto: { 
+        name: string,
+        jwt : string }
       - response dto: { thread: id }  
 
     -> GET /[id]/ - получить данные о конкретном треде
@@ -67,7 +69,8 @@ Thread:
     -> POST /
         - request dto: {
           body: string,
-          thread: id
+          thread: id,
+          jwt : string
         }
         - response dto: {
           id: id,
@@ -77,9 +80,14 @@ Thread:
         }
         
     -> PUT /[id]/
-        - request dto: { body: string }
+        - request dto: { 
+          body: string,
+          jwt : string }
         
     -> DELETE /[id]/
+        - request dto: {
+          jwt : string
+        }
 
   /auth
     -> POST /signup/
@@ -98,12 +106,24 @@ Thread:
           password: string
         }
         - response dto: {
-          magic)))????!?!?!?7
+          jwt : string,
+          refresh_token : string
+        }
+
+    -> POST /get_jwt/
+        - request dto: {
+          refresh_token: string
+        }
+        - response dto: {
+          nickname : string,
+          jwt : string,
+          refresh_token : string
         }
 
   /profiles
     -> PUT /[id]
         - request dto: {
           name?: string,
-          avatar?: image
+          avatar?: image,
+          jwt: string
         }
