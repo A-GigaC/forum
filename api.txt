@@ -121,7 +121,7 @@ Thread:
         }
 
   /profiles
-    -> PUT /[id]
+    -> PUT /
         - request dto: {
           name?: string,
           avatar?: image,

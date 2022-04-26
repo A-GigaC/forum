@@ -3,7 +3,7 @@ from aiohttp import web
 
 from jsonschema import validate
 from json import dumps
-from utils.access_key import jwt_expired
+from utils.access_key import jwt_expired, get_jwt_dec
 import jwt
 
 from db import db
@@ -12,7 +12,9 @@ from models.message import Message
 from models.profile import Profile
 from models.user import User
 
-create_sch = {
+from utils.secret_key import secret_key
+
+schema = {
     "type" : "object",
     "properties" : {
         "jwt" : {"type" : "string"},
@@ -23,16 +25,16 @@ routes = web.RouteTableDef()
 
 @routes.post('/api/threads/')
 async def create_thread(request):
-    # парсим json, валидируем получаем имя нового треда 
+    # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    validate(instance=json_input, schema=create_sch)
-    jwt_enc = json_input['jwt']
-    jwt_dec = jwt.decode(jwt_enc, algorithms="HS256")
+    validate(instance=json_input, schema=schema)
+    jwt_dec = get_jwt_dec(json_input['jwt']) 
     jwt_expired(jwt_dec)
+    user_id = jwt_dec['user_id']
     # получаем автора по user_id
-    author_name = await Profile.select('name').where(Profile.user_id==jwt_dec['user_id']).gino.scalar()
+    author = await Profile.select('id').where(Profile.user_id==user_id).gino.scalar()
     # создаём новый тред с заданным именем и сохраняем в бд
-    thread = await Thread.create(name=json_input['name'], author=author_name)
+    thread = await Thread.create(name=json_input['name'], author=author)
     json = dumps({'thread': thread.id })
     return web.Response(text=json)
 

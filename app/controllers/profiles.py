@@ -19,20 +19,17 @@ schema = {
 
 routes = web.RouteTableDef()
 
-@routes.put('/api/profiles/{id}/')
+@routes.put('/api/profiles/')
 async def edit_profile(request):
-    id = int(request.match_info['id'])
     # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
     validate(instance=json_input, schema=schema)
-    jwt_dec = get_jwt_dec(json_input) 
+    jwt_dec = get_jwt_dec(json_input['jwt']) 
     # проверка доступа jwt
-    if jwt_dec['user_id'] != id:
-        tpe = dumps({"error":"wrong jwt"})
-        return web.Response(text=tpe)
     jwt_expired(jwt_dec)
+    user_id = jwt_dec['user_id']
     # получаем имя
     name = json_input['name']
     # редактируем профиль
-    await Profile.update.values(name=name).where(Profile.id==id).gino.status()
+    await Profile.update.values(name=name).where(Profile.user_id==user_id).gino.status()
     return web.Response(text="success!")

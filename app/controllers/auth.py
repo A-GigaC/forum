@@ -12,12 +12,8 @@ from models.user import User
 from models.profile import Profile
 from models.rt import Refresh_token
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-SECRET_KEY = str(os.getenv('SECRET_KEY'))
+from utils.secret_key import secret_key
+from utils.validation import validation
 
 signup_sch = {
     "type" : "object",
@@ -54,8 +50,9 @@ routes = web.RouteTableDef()
 async def signup(request):
     # парсим json, получаем необходимую информацию и валидируем
     json_input = await request.json() 
-    validate(instance=json_input, schema=signup_sch)
+    validation(json_input, signup_sch)
     # проверка существования пользователя с введённым никнеймом
+    print(json_input['nickname'])
     if await db.scalar(db.exists(User.query.where(User.nickname == json_input['nickname'])).select()):
         nickAlreadyExists = dumps({"error":"nickname already exists"})
         return web.Response(text=nickAlreadyExists)
@@ -63,8 +60,8 @@ async def signup(request):
         # создаём нового юзера
         user = await User.create(nickname=json_input['nickname'],
             password=json_input['password'])
-        profile = await Profile.create(name=json_input['profile']['name'],
-        user_id=user.id)
+        profile = await Profile.create(name=json_input['name'],
+        user_id=user.id, registration_time=int(datetime.now().timestamp()))
         json = dumps({"success":"you can login"})
         return web.Response(text=json)
 
@@ -90,14 +87,12 @@ async def signin(request):
             encoding="utf8")).hexdigest())
         await Refresh_token.create(refresh_token=refresh_token,
             user_id=user_id, creation_time=datetime.now().timestamp())
-        # создаём jwt #$
+        # создаём jwt 
         jwt_ = {"user_id": user_id, 
         "creation_time":str(datetime.now().timestamp())}
-        jwt_enc = (jwt.encode({"data":jwt_}, SECRET_KEY, algorithm="HS256")).decode('utf-8')
+        jwt_enc = (jwt.encode({"data":jwt_}, secret_key(), algorithm="HS256")).decode('utf-8')
         # формируем ответ
         json = dumps({"jwt":jwt_enc, "refresh_token":str(refresh_token)})
-        # #$
-        print(jwt_enc)
         return web.Response(text=json)
     else:
         error = dumps({"error":"wrong password"})
@@ -131,7 +126,7 @@ async def get_jwt(request):
         # создаём jwt
         jwt_ = {"user_id": user_id, 
         "creation_time":datetime.now().timestamp()}
-        jwt_enc = (jwt.encode({"data":jwt_}, SECRET_KEY, algorithm="HS256")).decode('utf-8')
+        jwt_enc = (jwt.encode({"data":jwt_}, secret_key(), algorithm="HS256")).decode('utf-8')
         # формируем ответ
         json = dumps({"jwt":jwt_enc, "refresh_token":str(refresh_token)})
         return web.Response(text=json)

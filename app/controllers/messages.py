@@ -1,5 +1,5 @@
 from aiohttp import web
-import datetime
+from datetime import datetime
 
 from json import dumps
 from jsonschema import validate
@@ -10,6 +10,8 @@ from db import db
 from models.message import Message
 from models.profile import Profile
 from models.user import User
+
+from utils.secret_key import secret_key
 
 create_sch = {
     "type" : "object",
@@ -37,11 +39,11 @@ routes = web.RouteTableDef()
 
 @routes.post('/api/messages/')
 async def create_message(request):
-    # парсим и валидируем json, проверяем jwt
+    # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
     validate(instance=json_input, schema=create_sch)
-    jwt_dec = get_jwt_dec(json_input)  
-    jwt_expired(jwt_dec)    
+    jwt_dec = get_jwt_dec(json_input['jwt']) 
+    jwt_expired(jwt_dec)  
     # получаем профиль <- user_id <- jwt_dec
     author_id = await Profile.select('id').where(Profile.user_id==jwt_dec['user_id']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
@@ -62,11 +64,11 @@ async def create_message(request):
 
 @routes.put('/api/messages/{id}/')
 async def edit_message(request):
-    # парсим json, получаем тело нового сообщения и id треда, в котором будет наше сообщние
+    # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    validate(instance=json_input, schema=edit_sch)
-    jwt_dec = get_jwt_dec(json_input)  
-    jwt_expired(jwt_dec)
+    validate(instance=json_input, schema=create_sch)
+    jwt_dec = get_jwt_dec(json_input['jwt']) 
+    jwt_expired(jwt_dec)  
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по jwt проверяем право на редактирование
@@ -78,11 +80,11 @@ async def edit_message(request):
 
 @routes.delete('/api/messages/{id}/')
 async def delete_message(request):
-    # парсим json, получаем тело нового сообщения и id треда, в котором будет наше сообщние
+    # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    validate(instance=json_input, schema=delete_sch)
-    jwt_dec = get_jwt_dec(json_input)  
-    jwt_expired(jwt_dec)
+    validate(instance=json_input, schema=create_sch)
+    jwt_dec = get_jwt_dec(json_input['jwt']) 
+    jwt_expired(jwt_dec)  
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по auth_key проверяем право на редактирование
