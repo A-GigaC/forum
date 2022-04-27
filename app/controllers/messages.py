@@ -11,7 +11,6 @@ from models.message import Message
 from models.profile import Profile
 from models.user import User
 
-from utils.secret_key import secret_key
 
 create_sch = {
     "type" : "object",
@@ -41,9 +40,17 @@ routes = web.RouteTableDef()
 async def create_message(request):
     # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    validate(instance=json_input, schema=create_sch)
-    jwt_dec = get_jwt_dec(json_input['jwt']) 
-    jwt_expired(jwt_dec)  
+    error = validate(json_input, create_sch)
+    if error: 
+        web.Response(text=error)
+    jwt_dec = get_jwt_dec(json_input['jwt'])
+    if not jwt_dec:
+        error = dumps({"error":"wrong token"})
+        return web.Response(text=error)        
+    # проверка досутпа jwt
+    if jwt_expired(jwt_dec):
+        error = dumps({"error":"expired token"})
+        return web.Response(text=error)
     # получаем профиль <- user_id <- jwt_dec
     author_id = await Profile.select('id').where(Profile.user_id==jwt_dec['user_id']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
@@ -66,13 +73,23 @@ async def create_message(request):
 async def edit_message(request):
     # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    validate(instance=json_input, schema=create_sch)
-    jwt_dec = get_jwt_dec(json_input['jwt']) 
-    jwt_expired(jwt_dec)  
+    error = validate(json_input, edit_sch)
+    if error: 
+        web.Response(text=error)
+    jwt_dec = get_jwt_dec(json_input['jwt'])
+    if not jwt_dec:
+        error = dumps({"error":"wrong token"})
+        return web.Response(text=error)
+    # проверка досутпа jwt
+    if jwt_expired(jwt_dec):
+        error = dumps({"error":"expired token"})
+        return web.Response(text=error)
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по jwt проверяем право на редактирование
-    await message_access(jwt_dec)
+    error = await message_access(jwt_dec)
+    if error:
+        return web.Response(text=error)
     # меняем данные
     new_body = json_input["body"]
     edited_message = await Message.update.values(body=new_body).where(Message.id==id).gino.status()
@@ -82,13 +99,23 @@ async def edit_message(request):
 async def delete_message(request):
     # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    validate(instance=json_input, schema=create_sch)
+    error = validate(json_input, delete_sch)
+    if error: 
+        web.Response(text=error)
     jwt_dec = get_jwt_dec(json_input['jwt']) 
-    jwt_expired(jwt_dec)  
+    if not jwt_dec:
+        error = dumps({"error":"wrong token"})
+        return web.Response(text=error)
+    # проверка досутпа jwt
+    if jwt_expired(jwt_dec):
+        error = dumps({"error":"expired token"})
+        return web.Response(text=error)
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по auth_key проверяем право на редактирование
-    await message_access(jwt_dec)
+    error = await message_access(jwt_dec)
+    if error:
+        return web.Response(text=error)
     
     await Message.delete.where(Message.id==id).gino.status()
     return web.Response(text="message deleted")

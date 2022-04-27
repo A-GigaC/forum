@@ -25,11 +25,19 @@ routes = web.RouteTableDef()
 
 @routes.post('/api/threads/')
 async def create_thread(request):
-    # парсим json, валидируем и проверяем доступ
+    # парсим json, валидируем 
     json_input = await request.json()
-    validate(instance=json_input, schema=schema)
+    error = validate(json_input, schema)
+    if error: 
+        web.Response(text=error)
     jwt_dec = get_jwt_dec(json_input['jwt']) 
-    jwt_expired(jwt_dec)
+    if not jwt_dec:
+        error = dumps({"error":"wrong token"})
+        return web.Response(text=error)
+    # проверка досутпа jwt
+    if jwt_expired(jwt_dec):
+        error = dumps({"error":"expired token"})
+        return web.Response(text=error) 
     user_id = jwt_dec['user_id']
     # получаем автора по user_id
     author = await Profile.select('id').where(Profile.user_id==user_id).gino.scalar()

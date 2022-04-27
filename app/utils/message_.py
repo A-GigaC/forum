@@ -11,4 +11,5 @@ async def message_access(jwt_dec):
     message = await Message.get(id)    
     if author_id != message.author_id:
         access_error = dumps({"error":"you are not the author"})
-        return web.Response(text=access_error)
+        return access_error
+    else: return False
