@@ -54,7 +54,7 @@ async def signup(request):
     # проверка существования пользователя с введённым никнеймом
     print(json_input['nickname'])
     if await db.scalar(db.exists(User.query.where(User.nickname == json_input['nickname'])).select()):
-        nickAlreadyExists = dumps({"error":"nickname already exists"})
+        nickAlreadyExists = dumps({"error": "nickname already exists"})
         return web.Response(text=nickAlreadyExists)
     else:
         # создаём нового юзера
@@ -62,7 +62,7 @@ async def signup(request):
             password=json_input['password'])
         profile = await Profile.create(name=json_input['name'],
         user_id=user.id, registration_time=int(datetime.now().timestamp()))
-        json = dumps({"success":"you can login"})
+        json = dumps({"success": "you can login"})
         return web.Response(text=json)
 
 @routes.post('/api/auth/signin/')
@@ -73,7 +73,7 @@ async def signin(request):
     # проверка существования пользователя с заданным никнеймом
    # await db.scalar(db.exists(User.query.where(User.email == email)).select())
     if not await db.scalar(db.exists(User.query.where(User.nickname == json_input['nickname'])).select()):
-        nickDoesntExists = dumps({"error":"nickname doesnt exists"})
+        nickDoesntExists = dumps({"error": "nickname doesnt exists"})
         return web.Response(text=nickDoesntExists)
     # получение пароля
     password = await User.select('password').where(
@@ -89,13 +89,13 @@ async def signin(request):
             user_id=user_id, creation_time=datetime.now().timestamp())
         # создаём jwt 
         jwt_ = {"user_id": user_id, 
-        "creation_time":str(datetime.now().timestamp())}
-        jwt_enc = (jwt.encode({"data":jwt_}, secret_key(), algorithm="HS256")).decode('utf-8')
+        "creation_time": str(datetime.now().timestamp())}
+        jwt_enc = (jwt.encode({"data": jwt_}, secret_key(), algorithm="HS256")).decode('utf-8')
         # формируем ответ
-        json = dumps({"jwt":jwt_enc, "refresh_token":str(refresh_token)})
+        json = dumps({"jwt": jwt_enc, "refresh_token": str(refresh_token)})
         return web.Response(text=json)
     else:
-        error = dumps({"error":"wrong password"})
+        error = dumps({"error": "wrong password"})
         return web.Response(text=error)
     
 @routes.post('/api/auth/get_jwt/')
@@ -107,14 +107,14 @@ async def get_jwt(request):
     nickname = json_input['nickname']
     # проверяем существования введённого refresh_token
     if not await db.scalar(db.exists().where(Refresh_token.refresh_token == input_refresh_token).select()):
-        error = dumps({"error":"wrong RT"})
+        error = dumps({"error": "wrong RT"})
         return web.Response(text=error)
     old_refresh_token = await Refresh_token.select('creation_time').where(
         Refresh_token.refresh_token==input_refresh_token).gino.scalar()
     user_id = await User.select('id').where(User.nickname==nickname).gino.scalar()
     #проверка срока годности ключа
     if old_refresh_token + 86400 * 15 < datetime.now().timestamp():
-        expired_rt = dumps({"error":"expired RT -5000 social credit"})
+        expired_rt = dumps({"error": "expired RT -5000 social credit"})
         return web.Response(text=expired_rt)
     else:
         # всё верно!     
@@ -125,10 +125,10 @@ async def get_jwt(request):
         creation_time=datetime.now().timestamp())
         # создаём jwt
         jwt_ = {"user_id": user_id, 
-        "creation_time":datetime.now().timestamp()}
-        jwt_enc = (jwt.encode({"data":jwt_}, secret_key(), algorithm="HS256")).decode('utf-8')
+        "creation_time": datetime.now().timestamp()}
+        jwt_enc = (jwt.encode({"data": jwt_}, secret_key(), algorithm="HS256")).decode('utf-8')
         # формируем ответ
-        json = dumps({"jwt":jwt_enc, "refresh_token":str(refresh_token)})
+        json = dumps({"jwt": jwt_enc, "refresh_token": str(refresh_token)})
         return web.Response(text=json)
                                             
 @routes.post('/api/auth/logout/')

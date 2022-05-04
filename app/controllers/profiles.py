@@ -10,6 +10,9 @@ from db import db
 from models.profile import Profile
 from models.user import User
 
+import os.path
+import pathlib
+
 schema = {
     "type" : "object",
     "properties" : {
@@ -41,3 +44,33 @@ async def edit_profile(request):
     # редактируем профиль
     await Profile.update.values(name=name).where(Profile.user_id==user_id).gino.status()
     return web.Response(text="success!")
+
+@routes.post('/api/profiles/avatar')
+async def create_avatar(request):
+    # получаем имя
+    jwt = request.headers['Authorization']
+    jwt_dec = get_jwt_dec(jwt) 
+    if not jwt_dec:
+        error = dumps({"error":"wrong token"})
+        return web.Response(text=error)
+    # проверка досутпа jwt
+    if jwt_expired(jwt_dec):
+        error = dumps({"error":"expired token"})
+        return web.Response(text=error)
+    user_id = jwt_dec['user_id']
+    name = await Profile.select('name').where(Profile.user_id==user_id).gino.scalar()
+    # получаем аватар
+    avatar = await request.read()
+    # создаём и открываем файл
+    save_path = pathlib.Path(__file__).parent.resolve() + '/files'
+    file_name = f'{name}_avatar'
+    completeName = os.path.join(save_path, file_name)
+    with open(file_name, "wb") as new_avatar:
+        new_avatar.write(avatar)
+    new_avatar.close()
+    # ответ
+    return web.Response(text="!~@# я спать хочу. надо мыть посуду")
+
+    
+    
+    

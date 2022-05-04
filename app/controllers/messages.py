@@ -54,6 +54,7 @@ async def create_message(request):
     # получаем профиль <- user_id <- jwt_dec
     author_id = await Profile.select('id').where(Profile.user_id==jwt_dec['user_id']).gino.scalar()
     author_name = await Profile.select('name').where(Profile.user_id==author_id).gino.scalar()
+    avatar = await Profile.select('avatar').where(Profile.user_id==author_id).gino.scalar()            
     # создаём новое сообщение и записываем в БД
     message = await Message.create(
         body=json_input['body'], thread_id=int(json_input['thread']),
@@ -65,7 +66,8 @@ async def create_message(request):
         "body":message.body, 
         "author":{
             "publication_time": message.publication_time,
-            "name": author_name,}
+            "name": author_name,
+            "avatar": avatar,}
             })
     return web.Response(text=json)
 
