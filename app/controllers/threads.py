@@ -30,7 +30,8 @@ async def create_thread(request):
     error = validate(json_input, schema)
     if error: 
         web.Response(text=error)
-    jwt_dec = get_jwt_dec(json_input['jwt']) 
+    jwt = request.headers['Authorization']
+    jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
         error = dumps({"error":"wrong token"})
         return web.Response(text=error)

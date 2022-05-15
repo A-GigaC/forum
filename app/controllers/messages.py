@@ -43,7 +43,8 @@ async def create_message(request):
     error = validate(json_input, create_sch)
     if error: 
         web.Response(text=error)
-    jwt_dec = get_jwt_dec(json_input['jwt'])
+    jwt = request.headers['Authorization']
+    jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
         error = dumps({"error":"wrong token"})
         return web.Response(text=error)        
@@ -78,7 +79,8 @@ async def edit_message(request):
     error = validate(json_input, edit_sch)
     if error: 
         web.Response(text=error)
-    jwt_dec = get_jwt_dec(json_input['jwt'])
+    jwt = request.headers['Authorization']
+    jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
         error = dumps({"error":"wrong token"})
         return web.Response(text=error)
@@ -104,7 +106,8 @@ async def delete_message(request):
     error = validate(json_input, delete_sch)
     if error: 
         web.Response(text=error)
-    jwt_dec = get_jwt_dec(json_input['jwt']) 
+    jwt = request.headers['Authorization']
+    jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
         error = dumps({"error":"wrong token"})
         return web.Response(text=error)

@@ -30,7 +30,8 @@ async def edit_profile(request):
     error = validate(json_input, schema)
     if error: 
         web.Response(text=error)
-    jwt_dec = get_jwt_dec(json_input['jwt']) 
+    jwt = request.headers['Authorization']
+    jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
         error = dumps({"error":"wrong token"})
         return web.Response(text=error)
@@ -62,15 +63,29 @@ async def create_avatar(request):
     # получаем аватар
     avatar = await request.read()
     # создаём и открываем файл
-    save_path = pathlib.Path(__file__).parent.resolve() + '/files'
+    save_path = pathlib.Path(__file__).parent.resolve() + '/files/'
     file_name = f'{name}_avatar'
     completeName = os.path.join(save_path, file_name)
-    with open(file_name, "wb") as new_avatar:
+    with open(completeName, "wb") as new_avatar:
         new_avatar.write(avatar)
     new_avatar.close()
+    # делаем запись в БД
+    profile = await Profile.where(Profile.user_id==user_id).gino.scalar()
+    profile.avatar = save_path + file_name
     # ответ
-    return web.Response(text="!~@# я спать хочу. надо мыть посуду")
+    return web.Response(text="!~@# я спать хочу.")
 
-    
-    
-    
+@routes.get('api/profiles/{name}/avatar')
+async def get_avatar(request):
+    # получаем name 
+    name = int(request.match_info['name'])
+    # получение Profile -> path_to_avatar -> file
+    profile = await Profile.where(Profile.name == name).gino.scalar()
+    path_to_avatar = profile.avatar
+    file_name = f'{name}_avatar'
+    completeName = os.path.join(path_to_avatar, file_name)
+    with open(completeName, "wb") as avatar:
+        pass
+    # возвращаем аватар
+    content = avatar
+    return web.Response(body=content)
