@@ -17,7 +17,6 @@ schema = {
     "type" : "object",
     "properties" : {
         "name" : {"type" : "string"},
-        "jwt" : {"type" : "string"},
     },
 }
 
@@ -73,13 +72,13 @@ async def create_avatar(request):
     profile = await Profile.where(Profile.user_id==user_id).gino.scalar()
     profile.avatar = save_path + file_name
     # ответ
-    return web.Response(text="!~@# я спать хочу.")
+    return web.Response(text="200OK")
 
-@routes.get('api/profiles/{name}/avatar')
+@routes.get('api/profiles/{name}/avatar/')
 async def get_avatar(request):
     # получаем name 
     name = int(request.match_info['name'])
-    # получение Profile -> path_to_avatar -> file
+    # получение Profile -> path_to_avatar -> avatar
     profile = await Profile.where(Profile.name == name).gino.scalar()
     path_to_avatar = profile.avatar
     file_name = f'{name}_avatar'

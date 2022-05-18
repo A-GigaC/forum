@@ -4,7 +4,7 @@ Profile:
 - id: id  
 - name - публичное имя - любой язык, от 1 до 50 символов: string
 - registration_time: date
-- avatar?: image
+- avatar: image
 
 User:
 - id: id
@@ -15,6 +15,7 @@ User:
 Message:
 - id: id
 - body: string
+- image: image
 - publication_time: date
 - author: Profile
 
@@ -45,7 +46,7 @@ Thread:
     -> POST / - создает новый тредов
       - request dto: { 
         name: string,
-        jwt : string }
+         }
       - response dto: { thread: id }  
 
     -> GET /[id]/ - получить данные о конкретном треде
@@ -69,8 +70,7 @@ Thread:
     -> POST /
         - request dto: {
           body: string,
-          thread: id,
-          jwt : string
+          thread: id,         
         }
         - response dto: {
           id: id,
@@ -78,15 +78,24 @@ Thread:
           publication_time: date,
           author: Profile
         }
+
+    -> POST /[id]/images/
+        - request dto: {
+          image: image
+        }
+    
+    -> GET /[id]/images/
+        - response dto: {
+          image: image
+        }
         
     -> PUT /[id]/
         - request dto: { 
           body: string,
-          jwt : string }
+           }
         
     -> DELETE /[id]/
-        - request dto: {
-          jwt : string
+        - request dto: {          
         }
 
   /auth
@@ -106,7 +115,6 @@ Thread:
           password: string
         }
         - response dto: {
-          jwt : string,
           refresh_token : string
         }
 
@@ -116,14 +124,21 @@ Thread:
         }
         - response dto: {
           nickname : string,
-          jwt : string,
           refresh_token : string
         }
 
   /profiles
     -> PUT /
         - request dto: {
-          name?: string,
-          avatar?: image,
-          jwt: string
+          name: string         
+        }
+
+    -> POST /profiles/avatar/
+        - request dto: {
+          avatar: image
+        }  
+
+    -> GET /[name]/images/
+        - response dto: {
+          avatar: image
         }

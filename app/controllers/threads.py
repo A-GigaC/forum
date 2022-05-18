@@ -17,7 +17,6 @@ from utils.secret_key import secret_key
 schema = {
     "type" : "object",
     "properties" : {
-        "jwt" : {"type" : "string"},
         "name" : {"type" : "string"},
     },
 }
@@ -68,6 +67,7 @@ async def get_thread_by_id(request):
             "last_message": {
                 "id": last_message.id,
                 "body": last_message.body,
+                "image": last_message.image,
                 "publication_time" : last_message.publication_time,
                 "author": {
                     "name": last_message_author.name,
