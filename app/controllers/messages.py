@@ -138,7 +138,7 @@ async def delete_message(request):
     await Message.delete.where(Message.id==id).gino.status()
     return web.Response(text="message deleted")
     
-@routes.get('api/profiles/{id}/message/')
+@routes.get('/api/profiles/{id}/message/')
 async def get_avatar(request):
     # получаем name 
     id = int(request.match_info['id'])

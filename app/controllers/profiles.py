@@ -74,7 +74,7 @@ async def create_avatar(request):
     # ответ
     return web.Response(text="200OK")
 
-@routes.get('api/profiles/{name}/avatar/')
+@routes.get('/api/profiles/{name}/avatar/')
 async def get_avatar(request):
     # получаем name 
     name = int(request.match_info['name'])

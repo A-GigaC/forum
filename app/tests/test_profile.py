@@ -6,12 +6,14 @@ def test_profile():
     # login and get_jwt
     jwt, rt = auth()
     url_profile = 'http://localhost:8080/api/profiles/'
-    profiles_data = {"name" : "SirGamer","jwt" : jwt}
-    message = requests.put(url_profile, json=profiles_data)
+    profiles_data = {"name" : "name1.1"}
+    headerT = {"Authorization" : jwt}
+    message = requests.put(url_profile, headers=headerT, json=profiles_data)
     print(message.text)
     wrong_jwt = 'qwerty1231456asdfghzxcvbn'
-    wrong_data = {"name" : "SirGamer","jwt" : wrong_jwt}
-    error_message = requests.put(url_profile, json=wrong_data)
+    headerF = {"Authorization" : wrong_jwt}
+    wrong_data = {"name" : "name1.1"}
+    error_message = requests.put(url_profile, headers=headerF, json=wrong_data)
     print(error_message.text)
     assert error_message.text == '{"error": "wrong token"}', "Принимает несуществующие jwt!"
 

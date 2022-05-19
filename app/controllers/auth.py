@@ -139,7 +139,8 @@ async def logout(request):
     input_refresh_token = json_input['refresh_token']
     # проверяем существования введённого refresh_token
     refresh_token = await Refresh_token.query.where(Refresh_token.refresh_token==input_refresh_token).gino.first()
-    if refresh_token is None:
+    print(refresh_token.refresh_token)
+    if refresh_token.refresh_token is None:
         error = dumps({"error":"wrong RT"})
         return web.Response(text=error)
     # удаляем старый RT
