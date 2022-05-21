@@ -45,9 +45,8 @@ async def edit_profile(request):
     await Profile.update.values(name=name).where(Profile.user_id==user_id).gino.status()
     return web.Response(text="success!")
 
-@routes.post('/api/profiles/avatar')
+@routes.post('/api/profiles/avatar/')
 async def create_avatar(request):
-    # получаем имя
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt) 
     if not jwt_dec:
@@ -59,32 +58,41 @@ async def create_avatar(request):
         return web.Response(text=error)
     user_id = jwt_dec['user_id']
     name = await Profile.select('name').where(Profile.user_id==user_id).gino.scalar()
-    # получаем аватар
+    # получаем аватар и тип файла
+    image_type = request.headers['Content-Type']
+    postfix = '.'
+    flag = False
+    for x in image_type:
+        if x == '/': 
+            flag = True
+            continue
+        if flag: postfix += x
     avatar = await request.read()
     # создаём и открываем файл
-    save_path = pathlib.Path(__file__).parent.resolve() + '/files/'
-    file_name = f'{name}_avatar'
+    save_path = str(pathlib.Path(__file__).parent.resolve()) + "/files/"
+    file_name = f'{name}_avatar{postfix}'
     completeName = os.path.join(save_path, file_name)
+    new_file = open(completeName, 'a')
+    new_file.close()
     with open(completeName, "wb") as new_avatar:
         new_avatar.write(avatar)
     new_avatar.close()
     # делаем запись в БД
-    profile = await Profile.where(Profile.user_id==user_id).gino.scalar()
-    profile.avatar = save_path + file_name
+    profile_id = await Profile.select('id').where(
+        Profile.user_id==user_id).gino.scalar()
+    profile = await Profile.get(profile_id)
+    await profile.update(avatar=completeName).apply()
     # ответ
-    return web.Response(text="200OK")
+    return web.Response(text=f"{profile.avatar}")
 
 @routes.get('/api/profiles/{name}/avatar/')
 async def get_avatar(request):
     # получаем name 
-    name = int(request.match_info['name'])
-    # получение Profile -> path_to_avatar -> avatar
-    profile = await Profile.where(Profile.name == name).gino.scalar()
+    name = request.match_info['name']
+    # получение Profile -> path_to_avatar 
+    profile_id = await Profile.select('id').where(
+        Profile.name==name).gino.scalar()
+    profile = await Profile.get(profile_id)
     path_to_avatar = profile.avatar
-    file_name = f'{name}_avatar'
-    completeName = os.path.join(path_to_avatar, file_name)
-    with open(completeName, "wb") as avatar:
-        pass
-    # возвращаем аватар
-    content = avatar
-    return web.Response(body=content)
+    # отадём файл
+    return web.FileResponse(path_to_avatar)

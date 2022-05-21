@@ -61,7 +61,7 @@ async def signup(request):
         user = await User.create(nickname=json_input['nickname'],
             password=json_input['password'])
         profile = await Profile.create(name=json_input['name'],
-        user_id=user.id, registration_time=int(datetime.now().timestamp()))
+            user_id=user.id, registration_time=int(datetime.now().timestamp()))
         json = dumps({"success": "you can login"})
         return web.Response(text=json)
 
@@ -121,8 +121,8 @@ async def get_jwt(request):
         # создаём новый refresh токен
         refresh_token = str(sha256(bytes(json_input['nickname']+str(datetime.now().timestamp()),
             encoding="utf8")).hexdigest())
-        Refresh_token.update.values(refresh_token=refresh_token, 
-        creation_time=datetime.now().timestamp())
+        await Refresh_token.update(refresh_token=refresh_token, 
+        creation_time=datetime.now().timestamp()).apply()
         # создаём jwt
         jwt_ = {"user_id": user_id, 
         "creation_time": datetime.now().timestamp()}
