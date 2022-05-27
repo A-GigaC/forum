@@ -24,16 +24,16 @@ async def create_thread(request):
     json_input = await request.json()
     error = validation(json_input, schema)
     if error: 
-        web.Response(text=400)
+        web.Response(text="400")
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
         # error = dumps({"error":"wrong token"})
-        return web.Response(text=403)
+        return web.Response(text="403")
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
         # error = dumps({"error":"expired token"})
-        return web.Response(text=401) 
+        return web.Response(text="401") 
     user_id = jwt_dec['user_id']
     # получаем автора по user_id
     author = await Profile.select('id').where(Profile.user_id==user_id).gino.scalar()

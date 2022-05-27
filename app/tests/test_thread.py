@@ -15,6 +15,6 @@ def test_thread():
     wrong_data = {"name" : "wrong_name"}
     error_message = requests.post(url_thread, headers=header, json=wrong_data)
     print(error_message.text)
-    assert error_message.text == 403, "Принимает несуществующие jwt!"
+    assert error_message.text == "403", "Принимает несуществующие jwt!"
 
 test_thread()

@@ -20,7 +20,6 @@ import smtplib
 signup_sch = {
     "type" : "object",
     "properties" : {
-        "email" : {"type" : "string"},
         "nickname" : {"type" : "string"},
         "password" : {"type" : "string"},
         "name" : {"type" : "string"},
@@ -56,20 +55,19 @@ async def signup(request):
     json_input = await request.json() 
     error = validation(json_input, signup_sch)
     if error:
-        return web.Response(text=400) 
+        return web.Response(text="400") 
     # проверка существования пользователя с введённым никнеймом
     if await db.scalar(db.exists(User.query.where(User.nickname == json_input['nickname'])).select()):
         # nickAlreadyExists = dumps({"error": "nickname already exists"})
-        return web.Response(text=409)
+        return web.Response(text="409")
     else:
         # # # сделать проверку почты
         # создаём нового юзера
-        user = await User.create(email=json_input['email'], 
-            nickname=json_input['nickname'], password=json_input['password'])
+        user = await User.create(nickname=json_input['nickname'], password=json_input['password'])
         profile = await Profile.create(name=json_input['name'],
             user_id=user.id, registration_time=int(datetime.now().timestamp()))
         # json = dumps({"success": "you can login"})
-        return web.Response(text=100)
+        return web.Response(text="100")
 
 @routes.post('/api/auth/signin/')
 async def signin(request):
@@ -77,11 +75,11 @@ async def signin(request):
     json_input = await request.json() 
     error = validation(json_input, signin_sch)
     if error:
-        return web.Response(text=400) 
+        return web.Response(text="400") 
     # проверка существования пользователя с заданным никнеймом
     if not await db.scalar(db.exists(User.query.where(User.nickname == json_input['nickname'])).select()):
         # nickDoesntExists = dumps({"error": "nickname doesnt exists"})
-        return web.Response(text=409)
+        return web.Response(text="409")
     # получение пароля
     password = await User.select('password').where(
         User.nickname==json_input['nickname']).gino.scalar()
@@ -103,7 +101,7 @@ async def signin(request):
         return web.Response(text=json)
     else:
     #     error = dumps({"error": "wrong password"})
-        return web.Response(text=403)
+        return web.Response(text="403")
     
 @routes.post('/api/auth/get_jwt/')
 async def get_jwt(request):
@@ -111,20 +109,20 @@ async def get_jwt(request):
     json_input = await request.json() 
     error = validation(instance=json_input, schema=get_jwt_sch)
     if error:
-        return web.Response(text=400)
+        return web.Response(text="400")
     input_refresh_token = json_input['refresh_token']
     nickname = json_input['nickname']
     # проверяем существования введённого refresh_token
     if not await db.scalar(db.exists().where(Refresh_token.refresh_token == input_refresh_token).select()):
         # error = dumps({"error": "wrong RT"})
-        return web.Response(text=403)
+        return web.Response(text="403")
     old_refresh_token = await Refresh_token.select('creation_time').where(
         Refresh_token.refresh_token==input_refresh_token).gino.scalar()
     user_id = await User.select('id').where(User.nickname==nickname).gino.scalar()
     #проверка срока годности ключа
     if old_refresh_token + 86400 * 15 < datetime.now().timestamp():
         # expired_rt = dumps({"error": "expired RT -5000 social credit"})
-        return web.Response(text=401)
+        return web.Response(text="401")
     else:
         # всё верно!     
         # создаём новый refresh токен
@@ -146,16 +144,16 @@ async def logout(request):
     json_input = await request.json() 
     error = validation(json_input, logout_sch)
     if error:
-        return web.Response(text=400) 
+        return web.Response(text="400") 
     input_refresh_token = json_input['refresh_token']
     # проверяем существования введённого refresh_token
     refresh_token = await Refresh_token.query.where(Refresh_token.refresh_token==input_refresh_token).gino.first()
     print(refresh_token.refresh_token)
     if refresh_token.refresh_token is None:
         # error = dumps({"error":"wrong RT"})
-        return web.Response(text=403)
+        return web.Response(text="403")
     # удаляем старый RT
     await refresh_token.delete()
     # формируем ответ
     # json = dumps({"status":"200 OK"})
-    return web.Response(text=100)
+    return web.Response(text="100")

@@ -25,22 +25,22 @@ async def edit_profile(request):
     json_input = await request.json()
     error = validation(json_input, schema)
     if error: 
-        web.Response(text=400)
+        web.Response(text="400")
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
         # error = dumps({"error":"wrong token"})
-        return web.Response(text=403)
+        return web.Response(text="403")
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
         # error = dumps({"error":"expired token"})
-        return web.Response(text=401)
+        return web.Response(text="401")
     user_id = jwt_dec['user_id']
     # получаем имя
     name = json_input['name']
     # редактируем профиль
     await Profile.update.values(name=name).where(Profile.user_id==user_id).gino.status()
-    return web.Response(text=100)
+    return web.Response(text="100")
 
 @routes.post('/api/profiles/avatar/')
 async def create_avatar(request):
@@ -48,11 +48,11 @@ async def create_avatar(request):
     jwt_dec = get_jwt_dec(jwt) 
     if not jwt_dec:
         # error = dumps({"error":"wrong token"})
-        return web.Response(text=403)
+        return web.Response(text="403")
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
         # error = dumps({"error":"expired token"})
-        return web.Response(text=401)
+        return web.Response(text="401")
     user_id = jwt_dec['user_id']
     name = await Profile.select('name').where(Profile.user_id==user_id).gino.scalar()
     # получаем аватар и тип файла
