@@ -1,7 +1,5 @@
-from aiohttp import web
 import jwt
 from datetime import datetime
-from json import dumps
 
 from utils.secret_key import secret_key
 

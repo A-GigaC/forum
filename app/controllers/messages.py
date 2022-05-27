@@ -5,11 +5,10 @@ from json import dumps
 from jsonschema import validate
 from utils.access_key import jwt_expired, get_jwt_dec
 from utils.message_ import message_access
+from utils.validation import validation
 
-from db import db
 from models.message import Message
 from models.profile import Profile
-from models.user import User
 
 import os.path
 import pathlib
@@ -34,9 +33,9 @@ routes = web.RouteTableDef()
 async def create_message(request):
     # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    error = validate(json_input, create_sch)
-    if error: 
-        web.Response(text=error)
+    error = validation(json_input,create_sch)
+    if error:
+        return web.Response(text=400)
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
@@ -70,12 +69,12 @@ async def add_image(request):
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt) 
     if not jwt_dec:
-        error = dumps({"error":"wrong token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"wrong token"})
+        return web.Response(text=403)
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
-        error = dumps({"error":"expired token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"expired token"})
+        return web.Response(text=401)
     # id изображения
     id = int(request.match_info['id'])
     # получаем изображение и тип
@@ -108,24 +107,24 @@ async def add_image(request):
 async def edit_message(request):
     # парсим json, валидируем и проверяем доступ
     json_input = await request.json()
-    error = validate(json_input, edit_sch)
+    error = validation(json_input, edit_sch)
     if error: 
-        web.Response(text=error)
+        web.Response(text=400)
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
-        error = dumps({"error":"wrong token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"wrong token"})
+        return web.Response(text=403)
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
-        error = dumps({"error":"expired token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"expired token"})
+        return web.Response(text=401)
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по jwt проверяем право на редактирование
     error = await message_access(jwt_dec)
     if error:
-        return web.Response(text=error)
+        return web.Response(text=403)
     # меняем данные
     new_body = json_input["body"]
     edited_message = await Message.update.values(body=new_body).where(Message.id==id).gino.status()
@@ -137,20 +136,20 @@ async def delete_message(request):
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
-        error = dumps({"error":"wrong token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"wrong token"})
+        return web.Response(text=403)
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
-        error = dumps({"error":"expired token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"expired token"})
+        return web.Response(text=401)
     # получаем id сообщения
     id = int(request.match_info['id'])
     # по auth_key проверяем право на редактирование
     error = await message_access(jwt_dec)
     if error:
-        return web.Response(text=error)
+        return web.Response(text=403)
     await Message.delete.where(Message.id==id).gino.status()
-    return web.Response(text="message deleted")
+    return web.Response(text=100)
     
 @routes.get('/api/messages/{id}/image/')
 async def get_image(request):

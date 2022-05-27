@@ -1,18 +1,14 @@
-from venv import create
 from aiohttp import web
 
 from jsonschema import validate
 from json import dumps
 from utils.access_key import jwt_expired, get_jwt_dec
-import jwt
+from utils.validation import validation
 
 from db import db
 from models.thread import Thread
 from models.message import Message
 from models.profile import Profile
-from models.user import User
-
-from utils.secret_key import secret_key
 
 schema = {
     "type" : "object",
@@ -26,18 +22,18 @@ routes = web.RouteTableDef()
 async def create_thread(request):
     # парсим json, валидируем 
     json_input = await request.json()
-    error = validate(json_input, schema)
+    error = validation(json_input, schema)
     if error: 
-        web.Response(text=error)
+        web.Response(text=400)
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
-        error = dumps({"error":"wrong token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"wrong token"})
+        return web.Response(text=403)
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
-        error = dumps({"error":"expired token"})
-        return web.Response(text=error) 
+        # error = dumps({"error":"expired token"})
+        return web.Response(text=401) 
     user_id = jwt_dec['user_id']
     # получаем автора по user_id
     author = await Profile.select('id').where(Profile.user_id==user_id).gino.scalar()
@@ -89,4 +85,3 @@ async def get_threads(request):
         obj.append({"id":threads[_].id, "name":threads[_].name})
     json = dumps({"threads": obj})
     return web.Response(text=json)
-

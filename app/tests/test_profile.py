@@ -15,6 +15,6 @@ def test_profile():
     wrong_data = {"name" : "name1.1"}
     error_message = requests.put(url_profile, headers=headerF, json=wrong_data)
     print(error_message.text)
-    assert error_message.text == '{"error": "wrong token"}', "Принимает несуществующие jwt!"
+    assert error_message.text == 403, "Принимает несуществующие jwt!"
 
 test_profile()

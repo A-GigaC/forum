@@ -1,9 +1,7 @@
-from aiohttp import web
 from json import dumps
 
 from models.profile import Profile
 from models.message import Message
-from db import db
 
 async def message_access(jwt_dec):
     id_from_jwt = jwt_dec['user_id']

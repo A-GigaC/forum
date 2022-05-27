@@ -12,5 +12,13 @@ services:
     ports:
       - '5432:5432'
 
+  backend:
+    build: ./app
+    depends_on: 
+      - postgres
+    ports: 
+      - '5001:8080'
+    restart: always
+
 volumes:
   postgres:

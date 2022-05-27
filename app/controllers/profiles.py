@@ -1,14 +1,11 @@
 from aiohttp import web
 from jsonschema import validate
 from json import dumps
-import jwt
 
 from utils.access_key import jwt_expired, get_jwt_dec
-from utils.validation import validate
+from utils.validation import validation
 
-from db import db
 from models.profile import Profile
-from models.user import User
 
 import os.path
 import pathlib
@@ -26,36 +23,36 @@ routes = web.RouteTableDef()
 async def edit_profile(request):
     # парсим json, валидируем
     json_input = await request.json()
-    error = validate(json_input, schema)
+    error = validation(json_input, schema)
     if error: 
-        web.Response(text=error)
+        web.Response(text=400)
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt)
     if not jwt_dec:
-        error = dumps({"error":"wrong token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"wrong token"})
+        return web.Response(text=403)
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
-        error = dumps({"error":"expired token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"expired token"})
+        return web.Response(text=401)
     user_id = jwt_dec['user_id']
     # получаем имя
     name = json_input['name']
     # редактируем профиль
     await Profile.update.values(name=name).where(Profile.user_id==user_id).gino.status()
-    return web.Response(text="success!")
+    return web.Response(text=100)
 
 @routes.post('/api/profiles/avatar/')
 async def create_avatar(request):
     jwt = request.headers['Authorization']
     jwt_dec = get_jwt_dec(jwt) 
     if not jwt_dec:
-        error = dumps({"error":"wrong token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"wrong token"})
+        return web.Response(text=403)
     # проверка досутпа jwt
     if jwt_expired(jwt_dec):
-        error = dumps({"error":"expired token"})
-        return web.Response(text=error)
+        # error = dumps({"error":"expired token"})
+        return web.Response(text=401)
     user_id = jwt_dec['user_id']
     name = await Profile.select('name').where(Profile.user_id==user_id).gino.scalar()
     # получаем аватар и тип файла

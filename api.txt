@@ -126,6 +126,7 @@ Thread:
           nickname : string,
           refresh_token : string
         }
+    
 
   /profiles
     -> PUT /
