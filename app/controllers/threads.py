@@ -3,8 +3,13 @@ from aiohttp import web
 
 from jsonschema import validate
 from json import dumps
+<<<<<<< Updated upstream
 from utils.access_key import jwt_expired, get_jwt_dec
 import jwt
+=======
+from utils.access import JWTGuard
+from utils.validation import DTOGuard
+>>>>>>> Stashed changes
 
 from db import db
 from models.thread import Thread
@@ -22,7 +27,9 @@ schema = {
 }
 routes = web.RouteTableDef()
 
+
 @routes.post('/api/threads/')
+<<<<<<< Updated upstream
 async def create_thread(request):
     # парсим json, валидируем 
     json_input = await request.json()
@@ -39,10 +46,30 @@ async def create_thread(request):
         error = dumps({"error":"expired token"})
         return web.Response(text=error) 
     user_id = jwt_dec['user_id']
+=======
+@JWTGuard()
+@DTOGuard(schema)
+async def create_thread(validated_request):
+    # # парсим json, валидируем 
+    # json_input = await request.json()
+    # error = validation(json_input, schema)
+    # if error: 
+    #     return web.Response(text="400")
+    # jwt = request.headers['Authorization']
+    # jwt_dec = get_jwt_dec(jwt)
+    # if not jwt_dec:
+    #     # error = dumps({"error":"wrong token"})
+    #     return web.Response(text="403")
+    # # проверка досутпа jwt
+    # if jwt_expired(jwt_dec):
+    #     # error = dumps({"error":"expired token"})
+    #     return web.Response(text="401") 
+    user_id = validated_request.jwt_dec['user_id']
+>>>>>>> Stashed changes
     # получаем автора по user_id
     author = await Profile.select('id').where(Profile.user_id==user_id).gino.scalar()
     # создаём новый тред с заданным именем и сохраняем в бд
-    thread = await Thread.create(name=json_input['name'], author=author)
+    thread = await Thread.create(name=validated_request.json_input['name'], author=author)
     json = dumps({'thread': thread.id })
     return web.Response(text=json)
 
