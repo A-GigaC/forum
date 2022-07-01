@@ -14,7 +14,7 @@ class ValidatedRequest(AuthorizedRequest):
 
 
 def validation(json, schema):
-<<<<<<< Updated upstream
+
     try: 
         validate(instance=json, schema=schema)
         return False
@@ -22,13 +22,6 @@ def validation(json, schema):
         response = dumps({"reason":error.message})
         return response
     
-=======
-  try: 
-    validate(instance=json, schema=schema)
-    return False
-  except ValidationError as error:
-    response = dumps({"reason":error.message})
-    return response
 
 def DTOGuard(schema):
     def decorator(controller):
@@ -42,4 +35,4 @@ def DTOGuard(schema):
                 return controller(validated_request)
         return wrapped
     return decorator
->>>>>>> Stashed changes
+

@@ -1,9 +1,9 @@
-from aiohttp.web import Request
+from aiohttp.web import BaseRequest
 
 
-class AuthorizedRequest(Request):
+class AuthorizedRequest(BaseRequest):
 
-    def __init__(self, jwt_dec, *arg, **kw):
+    def __init__(self, jwt_dec, message, payload, protocol, payload_writer, task, loop, *arg, **kw):
         self.jwt_dec = jwt_dec  
         super().__init__(*arg, **kw)
 

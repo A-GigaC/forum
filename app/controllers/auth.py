@@ -47,14 +47,6 @@ logout_sch = {
 routes = web.RouteTableDef()
 
 @routes.post('/api/auth/signup/')
-<<<<<<< Updated upstream
-async def signup(request):
-    # парсим json, получаем необходимую информацию и валидируем
-    json_input = await request.json() 
-    validation(json_input, signup_sch)
-    # проверка существования пользователя с введённым никнеймом
-    print(json_input['nickname'])
-=======
 @DTOGuard(signup_sch)
 async def signup(validated_request):
     # # парсим json, получаем необходимую информацию и валидируем
@@ -64,7 +56,6 @@ async def signup(validated_request):
     #     return web.Response(text="400") 
     # # проверка существования пользователя с введённым никнеймом
     json_input = validated_request.json_input
->>>>>>> Stashed changes
     if await db.scalar(db.exists(User.query.where(User.nickname == json_input['nickname'])).select()):
         nickAlreadyExists = dumps({"error": "nickname already exists"})
         return web.Response(text=nickAlreadyExists)
@@ -78,14 +69,6 @@ async def signup(validated_request):
         return web.Response(text=json)
 
 @routes.post('/api/auth/signin/')
-<<<<<<< Updated upstream
-async def signin(request):
-    # парсим json, получаем необходимую информацию и валидируем
-    json_input = await request.json() 
-    validate(instance=json_input, schema=signin_sch)  
-    # проверка существования пользователя с заданным никнеймом
-   # await db.scalar(db.exists(User.query.where(User.email == email)).select())
-=======
 @DTOGuard(signin_sch)
 async def signin(validated_request):
     # # парсим json, получаем необходимую информацию и валидируем
@@ -95,7 +78,6 @@ async def signin(validated_request):
     #     return web.Response(text="400") 
     # проверка существования пользователя с заданным никнеймом
     json_input = validated_request.json_input
->>>>>>> Stashed changes
     if not await db.scalar(db.exists(User.query.where(User.nickname == json_input['nickname'])).select()):
         nickDoesntExists = dumps({"error": "nickname doesnt exists"})
         return web.Response(text=nickDoesntExists)
@@ -122,58 +104,9 @@ async def signin(validated_request):
         error = dumps({"error": "wrong password"})
         return web.Response(text=error)
     
-<<<<<<< Updated upstream
-@routes.post('/api/auth/get_jwt/')
-async def get_jwt(request):
-    # парсим и валидируем json
-    json_input = await request.json() 
-    validate(instance=json_input, schema=get_jwt_sch)
-    input_refresh_token = json_input['refresh_token']
-    nickname = json_input['nickname']
-    # проверяем существования введённого refresh_token
-    if not await db.scalar(db.exists().where(Refresh_token.refresh_token == input_refresh_token).select()):
-        error = dumps({"error": "wrong RT"})
-        return web.Response(text=error)
-    old_refresh_token = await Refresh_token.select('creation_time').where(
-        Refresh_token.refresh_token==input_refresh_token).gino.scalar()
-    user_id = await User.select('id').where(User.nickname==nickname).gino.scalar()
-    #проверка срока годности ключа
-    if old_refresh_token + 86400 * 15 < datetime.now().timestamp():
-        expired_rt = dumps({"error": "expired RT -5000 social credit"})
-        return web.Response(text=expired_rt)
-    else:
-        # всё верно!     
-        # создаём новый refresh токен
-        refresh_token = str(sha256(bytes(json_input['nickname']+str(datetime.now().timestamp()),
-            encoding="utf8")).hexdigest())
-        Refresh_token.update.values(refresh_token=refresh_token, 
-        creation_time=datetime.now().timestamp())
-        # создаём jwt
-        jwt_ = {"user_id": user_id, 
-        "creation_time": datetime.now().timestamp()}
-        jwt_enc = (jwt.encode({"data": jwt_}, secret_key(), algorithm="HS256")).decode('utf-8')
-        # формируем ответ
-        json = dumps({"jwt": jwt_enc, "refresh_token": str(refresh_token)})
-        return web.Response(text=json)
-                                            
-@routes.post('/api/auth/logout/')
-async def logout(request):
-    # парсим json, получаем необходимую информацию и валидируем
-    json_input = await request.json() 
-    validate(instance=json_input, schema=logout_sch)
-    input_refresh_token = json_input['refresh_token']
-    # проверяем существования введённого refresh_token
-    refresh_token = await Refresh_token.query.where(Refresh_token.refresh_token==input_refresh_token).gino.first()
-    print(refresh_token.refresh_token)
-    if refresh_token.refresh_token is None:
-        error = dumps({"error":"wrong RT"})
-        return web.Response(text=error)
-    # удаляем старый RT
-    await refresh_token.delete()
-    # формируем ответ
-    json = dumps({"status":"200 OK"})
-    return web.Response(text=json)
-=======
+
+
+
 # @routes.post('/api/auth/get_jwt/')
 # async def get_jwt(request):
 #     # парсим и валидируем json
@@ -228,4 +161,3 @@ async def logout(request):
 #     # формируем ответ
 #     # json = dumps({"status":"200 OK"})
 #     return web.Response(text="100")
->>>>>>> Stashed changes
